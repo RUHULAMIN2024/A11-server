@@ -32,6 +32,12 @@ async function run() {
     const foodsCollection = client.db('flavorFusion').collection('foods')
 
 
+    app.post('/foods', async (req, res) => {
+      const foodData=req.body
+      const result = await foodsCollection.insertOne(foodData)
+      res.send(result)
+    })
+
     app.get('/foods', async (req, res) => {
 
       const result = await foodsCollection.find().toArray()
