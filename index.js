@@ -58,6 +58,19 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/foods/:id', async(req, res)=>{
+      const id=req.params.id
+      const foodData=req.body
+      const query={_id: new ObjectId(id)}
+      const options={upsert:true}
+      const updateDoc={
+        $set:{...foodData}
+      }
+      const result = await foodsCollection.updateOne(query, updateDoc, options)
+      res.send(result)
+
+    })
+
     app.delete('/foods/:id', async(req, res)=>{
       const id=req.params.id
       const query={_id: new ObjectId(id)}
