@@ -30,8 +30,15 @@ async function run() {
   try {
 
     const foodsCollection = client.db('flavorFusion').collection('foods')
+    const orderCollection = client.db('flavorFusion').collection('orders')
 
 
+    app.post('/orders', async (req, res) => {
+      const orderData=req.body
+      const result = await orderCollection.insertOne(orderData)
+      res.send(result)
+    })
+    
     app.post('/foods', async (req, res) => {
       const foodData=req.body
       const result = await foodsCollection.insertOne(foodData)
