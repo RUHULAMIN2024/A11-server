@@ -30,12 +30,12 @@ async function run() {
   try {
 
     const foodsCollection = client.db('flavorFusion').collection('foods')
-    const orderCollection = client.db('flavorFusion').collection('orders')
+    const ordersCollection = client.db('flavorFusion').collection('orders')
 
 
     app.post('/orders', async (req, res) => {
       const orderData=req.body
-      const result = await orderCollection.insertOne(orderData)
+      const result = await ordersCollection.insertOne(orderData)
       res.send(result)
     })
     
@@ -58,6 +58,14 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/orders/:email', async (req, res) => {
+      const email=req.params.email
+      const query={'customer.email':email}
+      const result = await ordersCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    
     app.get('/single-food/:id', async (req, res) => {
       const id=req.params.id
       const query={_id: new ObjectId(id)}
@@ -82,6 +90,13 @@ async function run() {
       const id=req.params.id
       const query={_id: new ObjectId(id)}
       const result = await foodsCollection.deleteOne(query)
+      res.send(result)
+
+    })
+    app.delete('/orders/:id', async(req, res)=>{
+      const id=req.params.id
+      const query={_id: new ObjectId(id)}
+      const result = await ordersCollection.deleteOne(query)
       res.send(result)
 
     })
