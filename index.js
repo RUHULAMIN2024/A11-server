@@ -58,6 +58,11 @@ async function run() {
       const result = await foodsCollection.insertOne(foodData)
       res.send(result)
     })
+    app.post('/gallery', async (req, res) => {
+      const galleryData = req.body
+      const result = await galleryCollection.insertOne(galleryData)
+      res.send(result)
+    })
 
     app.get('/foods', async (req, res) => {
 
