@@ -31,16 +31,30 @@ async function run() {
 
     const foodsCollection = client.db('flavorFusion').collection('foods')
     const ordersCollection = client.db('flavorFusion').collection('orders')
+    const galleryCollection = client.db('flavorFusion').collection('gallery')
 
 
     app.post('/orders', async (req, res) => {
-      const orderData=req.body
+      const orderData = req.body
       const result = await ordersCollection.insertOne(orderData)
       res.send(result)
     })
-    
+
+    app.patch('/foods/:id', async (req, res) => {
+      const id = req.params.id
+      const count = req.body.newCount
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {count}
+      }
+      const result = await foodsCollection.updateOne(query, updateDoc)
+      res.send(result)
+
+
+    })
+
     app.post('/foods', async (req, res) => {
-      const foodData=req.body
+      const foodData = req.body
       const result = await foodsCollection.insertOne(foodData)
       res.send(result)
     })
@@ -50,52 +64,57 @@ async function run() {
       const result = await foodsCollection.find().toArray()
       res.send(result)
     })
+    app.get('/gallery', async (req, res) => {
+
+      const result = await galleryCollection.find().toArray()
+      res.send(result)
+    })
 
     app.get('/foods/:email', async (req, res) => {
-      const email=req.params.email
-      const query={'added_by.email':email}
+      const email = req.params.email
+      const query = { 'added_by.email': email }
       const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
 
     app.get('/orders/:email', async (req, res) => {
-      const email=req.params.email
-      const query={'customer.email':email}
+      const email = req.params.email
+      const query = { 'customer.email': email }
       const result = await ordersCollection.find(query).toArray()
       res.send(result)
     })
 
-    
+
     app.get('/single-food/:id', async (req, res) => {
-      const id=req.params.id
-      const query={_id: new ObjectId(id)}
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
       const result = await foodsCollection.findOne(query)
       res.send(result)
     })
 
-    app.put('/foods/:id', async(req, res)=>{
-      const id=req.params.id
-      const foodData=req.body
-      const query={_id: new ObjectId(id)}
-      const options={upsert:true}
-      const updateDoc={
-        $set:{...foodData}
+    app.put('/foods/:id', async (req, res) => {
+      const id = req.params.id
+      const foodData = req.body
+      const query = { _id: new ObjectId(id) }
+      const options = { upsert: true }
+      const updateDoc = {
+        $set: { ...foodData }
       }
       const result = await foodsCollection.updateOne(query, updateDoc, options)
       res.send(result)
 
     })
 
-    app.delete('/foods/:id', async(req, res)=>{
-      const id=req.params.id
-      const query={_id: new ObjectId(id)}
+    app.delete('/foods/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
       const result = await foodsCollection.deleteOne(query)
       res.send(result)
 
     })
-    app.delete('/orders/:id', async(req, res)=>{
-      const id=req.params.id
-      const query={_id: new ObjectId(id)}
+    app.delete('/orders/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
       const result = await ordersCollection.deleteOne(query)
       res.send(result)
 
