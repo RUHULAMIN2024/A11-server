@@ -1,5 +1,7 @@
 const express = require('express')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 require('dotenv').config()
@@ -9,7 +11,7 @@ const port = process.env.PORT || 5000
 const app = express()
 
 app.use(cors({
-  origin: '*',
+  origin: ['http://localhost:5173'],
   credentials: true,
   optionsSuccessStatus: 200,
 }))
@@ -33,6 +35,21 @@ async function run() {
     const ordersCollection = client.db('flavorFusion').collection('orders')
     const galleryCollection = client.db('flavorFusion').collection('gallery')
 
+    // jwt token
+    
+app.post('/jwt', (req, res) => {
+  const user = req.body
+  const token = jwt.sign(user, process.env.TOKEN,{expiresIn: '1d'})
+  res
+  .cookie('token',token,{
+    httpOnly:true,
+    secure:true,
+    sameSite:'none'
+  })
+  .send({success:true})
+})
+
+
 
     app.post('/orders', async (req, res) => {
       const orderData = req.body
@@ -45,7 +62,7 @@ async function run() {
       const count = req.body.newCount
       const query = { _id: new ObjectId(id) }
       const updateDoc = {
-        $set: {count}
+        $set: { count }
       }
       const result = await foodsCollection.updateOne(query, updateDoc)
       res.send(result)
