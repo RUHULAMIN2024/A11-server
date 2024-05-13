@@ -11,12 +11,13 @@ const port = process.env.PORT || 5000
 const app = express()
 
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: ['http://localhost:5173', 'http://flavor-fusion-11.surge.sh'],
   credentials: true,
   optionsSuccessStatus: 200,
 }))
 
 app.use(express.json())
+app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.KEY}:${process.env.KEY}@cluster0.rth5hqd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -28,6 +29,25 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+
+
+const verifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: 'unauthorized access' })
+  }
+
+  if (token) {
+    jwt.verify(token, process.env.TOKEN, (err, decoded) => {
+      if (err) {
+        return res.status(401).send({ message: 'unauthorized access' })
+      }
+      req.user = decoded
+      next()
+    })
+  }
+}
+
 async function run() {
   try {
 
@@ -36,20 +56,25 @@ async function run() {
     const galleryCollection = client.db('flavorFusion').collection('gallery')
 
     // jwt token
-    
-app.post('/jwt', (req, res) => {
-  const user = req.body
-  const token = jwt.sign(user, process.env.TOKEN,{expiresIn: '1d'})
-  res
-  .cookie('token',token,{
-    httpOnly:true,
-    secure:true,
-    sameSite:'none'
-  })
-  .send({success:true})
-})
 
+    app.post('/jwt', (req, res) => {
+      const user = req.body
+      const token = jwt.sign(user, process.env.TOKEN, { expiresIn: '1d' })
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'none'
+        })
+        .send({ success: true })
+    })
 
+    app.post('/logout', (req, res) => {
+      const user = req.body
+      res
+        .clearCookie('token', { maxAge: 0 })
+        .send({ success: true })
+    })
 
     app.post('/orders', async (req, res) => {
       const orderData = req.body
@@ -57,7 +82,7 @@ app.post('/jwt', (req, res) => {
       res.send(result)
     })
 
-    app.patch('/foods/:id', async (req, res) => {
+    app.patch('/foods/:id', verifyToken, async (req, res) => {
       const id = req.params.id
       const count = req.body.newCount
       const query = { _id: new ObjectId(id) }
@@ -70,20 +95,27 @@ app.post('/jwt', (req, res) => {
 
     })
 
-    app.post('/foods', async (req, res) => {
+    app.post('/foods', verifyToken, async (req, res) => {
       const foodData = req.body
       const result = await foodsCollection.insertOne(foodData)
       res.send(result)
     })
-    app.post('/gallery', async (req, res) => {
+    app.post('/gallery', verifyToken, async (req, res) => {
       const galleryData = req.body
       const result = await galleryCollection.insertOne(galleryData)
       res.send(result)
     })
 
     app.get('/foods', async (req, res) => {
-
       const result = await foodsCollection.find().toArray()
+      res.send(result)
+    })
+    app.get('/food-name/:value', async (req, res) => {
+      const value = req.params.value
+      
+      const query = { food_name: value }
+
+      const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
     app.get('/gallery', async (req, res) => {
@@ -92,29 +124,39 @@ app.post('/jwt', (req, res) => {
       res.send(result)
     })
 
-    app.get('/foods/:email', async (req, res) => {
+    app.get('/foods/:email', verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email
       const email = req.params.email
+      if (tokenEmail !== email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
       const query = { 'added_by.email': email }
       const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
 
-    app.get('/orders/:email', async (req, res) => {
+    app.get('/orders/:email', verifyToken, async (req, res) => {
+      const tokenEmail = req.user.email
+      console.log(tokenEmail)
       const email = req.params.email
+      if (tokenEmail !== email) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
       const query = { 'customer.email': email }
       const result = await ordersCollection.find(query).toArray()
       res.send(result)
     })
 
 
-    app.get('/single-food/:id', async (req, res) => {
+    app.get('/single-food/:id', verifyToken, async (req, res) => {
       const id = req.params.id
+
       const query = { _id: new ObjectId(id) }
       const result = await foodsCollection.findOne(query)
       res.send(result)
     })
 
-    app.put('/foods/:id', async (req, res) => {
+    app.put('/foods/:id', verifyToken, async (req, res) => {
       const id = req.params.id
       const foodData = req.body
       const query = { _id: new ObjectId(id) }
@@ -160,4 +202,6 @@ app.get('/', (req, res) => {
   res.send('server is running')
 })
 
-app.listen(port)
+app.listen(port, () => {
+  console.log('ok')
+})
