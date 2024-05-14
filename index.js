@@ -76,7 +76,7 @@ async function run() {
         .send({ success: true })
     })
 
-    app.post('/orders',verifyToken, async (req, res) => {
+    app.post('/orders', async (req, res) => {
       const orderData = req.body
       const result = await ordersCollection.insertOne(orderData)
       res.send(result)
@@ -95,12 +95,12 @@ async function run() {
 
     })
 
-    app.post('/foods', verifyToken, async (req, res) => {
+    app.post('/foods', async (req, res) => {
       const foodData = req.body
       const result = await foodsCollection.insertOne(foodData)
       res.send(result)
     })
-    app.post('/gallery',verifyToken,  async (req, res) => {
+    app.post('/gallery',  async (req, res) => {
       const galleryData = req.body
       const result = await galleryCollection.insertOne(galleryData)
       res.send(result)
@@ -156,7 +156,7 @@ async function run() {
       res.send(result)
     })
 
-    app.put('/foods/:id', verifyToken, async (req, res) => {
+    app.put('/foods/:id', async (req, res) => {
       const id = req.params.id
       const foodData = req.body
       const query = { _id: new ObjectId(id) }
@@ -169,14 +169,14 @@ async function run() {
 
     })
 
-    app.delete('/foods/:id',verifyToken, async (req, res) => {
+    app.delete('/foods/:id', async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await foodsCollection.deleteOne(query)
       res.send(result)
 
     })
-    app.delete('/orders/:id',verifyToken, async (req, res) => {
+    app.delete('/orders/:id', async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await ordersCollection.deleteOne(query)
