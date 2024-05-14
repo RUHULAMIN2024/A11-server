@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000
 const app = express()
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://flavor-fusion-11.surge.sh'],
+  origin: ['http://flavor-fusion-11.surge.sh'],
   credentials: true,
   optionsSuccessStatus: 200,
 }))
@@ -63,8 +63,8 @@ async function run() {
       res
         .cookie('token', token, {
           httpOnly: true,
-          secure: true,
-          sameSite: 'none'
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         })
         .send({ success: true })
     })
@@ -76,7 +76,7 @@ async function run() {
         .send({ success: true })
     })
 
-    app.post('/orders', async (req, res) => {
+    app.post('/orders',verifyToken, async (req, res) => {
       const orderData = req.body
       const result = await ordersCollection.insertOne(orderData)
       res.send(result)
@@ -100,7 +100,7 @@ async function run() {
       const result = await foodsCollection.insertOne(foodData)
       res.send(result)
     })
-    app.post('/gallery', verifyToken, async (req, res) => {
+    app.post('/gallery',verifyToken,  async (req, res) => {
       const galleryData = req.body
       const result = await galleryCollection.insertOne(galleryData)
       res.send(result)
@@ -169,14 +169,14 @@ async function run() {
 
     })
 
-    app.delete('/foods/:id', async (req, res) => {
+    app.delete('/foods/:id',verifyToken, async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await foodsCollection.deleteOne(query)
       res.send(result)
 
     })
-    app.delete('/orders/:id', async (req, res) => {
+    app.delete('/orders/:id',verifyToken, async (req, res) => {
       const id = req.params.id
       const query = { _id: new ObjectId(id) }
       const result = await ordersCollection.deleteOne(query)
@@ -202,6 +202,4 @@ app.get('/', (req, res) => {
   res.send('server is running')
 })
 
-app.listen(port, () => {
-  console.log('ok')
-})
+app.listen(port)
