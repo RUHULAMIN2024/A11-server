@@ -1,25 +1,24 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
-require('dotenv').config()
 
 const port = process.env.PORT || 5000
 
 const app = express()
 
 app.use(cors({
-  origin: ['http://flavor-fusion-11.surge.sh'],
+  origin: ['https://flavor-fusion-11.surge.sh'],
   credentials: true,
-  optionsSuccessStatus: 200,
 }))
 
 app.use(express.json())
 app.use(cookieParser())
 
-const uri = `mongodb+srv://${process.env.KEY}:${process.env.KEY}@cluster0.rth5hqd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${ process.env.KEY }:${ process.env.KEY }@cluster0.rth5hqd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -82,7 +81,7 @@ async function run() {
       res.send(result)
     })
 
-    app.patch('/foods/:id', verifyToken, async (req, res) => {
+    app.patch('/foods/:id', async (req, res) => {
       const id = req.params.id
       const count = req.body.newCount
       const query = { _id: new ObjectId(id) }
@@ -100,7 +99,7 @@ async function run() {
       const result = await foodsCollection.insertOne(foodData)
       res.send(result)
     })
-    app.post('/gallery',  async (req, res) => {
+    app.post('/gallery', async (req, res) => {
       const galleryData = req.body
       const result = await galleryCollection.insertOne(galleryData)
       res.send(result)
@@ -110,38 +109,39 @@ async function run() {
       const result = await foodsCollection.find().toArray()
       res.send(result)
     })
+
     app.get('/food-name/:value', async (req, res) => {
       const value = req.params.value
-      
+
       const query = { food_name: value }
 
       const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
+
     app.get('/gallery', async (req, res) => {
 
       const result = await galleryCollection.find().toArray()
       res.send(result)
     })
 
-    app.get('/foods/:email', verifyToken, async (req, res) => {
+    app.get('/foods/:email', async (req, res) => {
       const tokenEmail = req.user.email
       const email = req.params.email
-      if (tokenEmail !== email) {
-        return res.status(403).send({ message: 'forbidden access' })
-      }
+      // if (tokenEmail !== email) {
+      //   return res.status(403).send({ message: 'forbidden access' })
+      // }
       const query = { 'added_by.email': email }
       const result = await foodsCollection.find(query).toArray()
       res.send(result)
     })
 
-    app.get('/orders/:email', verifyToken, async (req, res) => {
-      const tokenEmail = req.user.email
-      console.log(tokenEmail)
+    app.get('/orders/:email', async (req, res) => {
+      // const tokenEmail = req.user.email
       const email = req.params.email
-      if (tokenEmail !== email) {
-        return res.status(403).send({ message: 'forbidden access' })
-      }
+      // if (tokenEmail !== email) {
+      //   return res.status(403).send({ message: 'forbidden access' })
+      // }
       const query = { 'customer.email': email }
       const result = await ordersCollection.find(query).toArray()
       res.send(result)
